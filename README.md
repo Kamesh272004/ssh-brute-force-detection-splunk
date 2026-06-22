@@ -174,10 +174,10 @@ Visualizes the brute force activity timeline to show when the authentication fai
 
 From the test data generated in this lab:
 
-* **Total failed SSH logins detected: 3
-* **Primary attacker IP identified: 192.168.64.1
-Attack type observed: Failed SSH authentication / brute force style login attempts
-Target service: OpenSSH on port 22
+- Total failed SSH logins detected: 3
+- Primary attacker IP identified: 192.168.64.1
+- Attack type observed: Failed SSH authentication / brute force style login attempts
+- Target service: OpenSSH on port 22
 
 ## The following log patterns are useful for SSH brute force detection in Linux:
 
