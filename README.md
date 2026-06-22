@@ -189,13 +189,27 @@ Key Log Indicators
 - Repeated failed logins from the same IP in a short period
 - MITRE ATT&CK Mapping
 
-## This activity can be mapped to the following ATT&CK techniques:
+## MITRE ATT&CK Mapping
 
-T1110 – Brute Force
-Adversaries attempt to gain access by trying many passwords or invalid credentials.
-T1078 – Valid Accounts (possible follow-on risk if credentials are eventually guessed)
-If the attacker succeeds, compromised credentials may be used for persistence or lateral movement.
-Detection Use Case
+- **T1110 – Brute Force**
+  - Repeated SSH authentication attempts using invalid credentials
+
+- **T1078 – Valid Accounts** *(possible follow-on impact if credentials are guessed successfully)*
+  - Relevant if the attacker later gains access with valid credentials
+  - ## Project Structure
+
+```bash
+ssh-brute-force-detection-splunk/
+│── README.md
+│── auth_clean.log
+│── screenshots/
+│   ├── ssh-service-status.png
+│   ├── kali-ssh-attempt.png
+│   ├── ubuntu-auth-log-failures.png
+│   └── splunk-dashboard.png
+│── queries/
+│   └── splunk_searches.txt
+```
 
 This project simulates a common SOC monitoring use case:
 
@@ -220,6 +234,17 @@ This project demonstrates hands-on knowledge in:
 - Basic SOC investigation workflow
 - Source IP extraction from raw logs
 - Security event visualization
+ ## Investigation Summary
+
+During the simulation, multiple failed SSH login attempts were generated from the Kali attacker machine against the Ubuntu target using an invalid user account. These attempts were recorded in the target system’s `/var/log/auth.log` file and later ingested into Splunk Cloud.
+
+The analysis confirmed:
+- Repeated failed SSH authentication attempts
+- Invalid user login activity
+- Source IP of the attacker machine
+- Time-based spike in failed logins visible on the dashboard
+
+This indicates a brute-force style authentication attack against the SSH service.
 ## Conclusion
 
 This project successfully demonstrates how to detect SSH brute force activity using Linux authentication logs and Splunk Cloud.
