@@ -343,20 +343,16 @@ ssh-brute-force-detection-splunk/
 ## Screenshots
 
 ### 1. SSH Service Enabled on Ubuntu
-
-![SSH Service Enabled](screenshots/ssh-service-status.png)
+![SSH Service Enabled](SSH%20connection%20established.png)
 
 ### 2. Kali Attacker Reaching the Ubuntu Target and Initiating SSH Attempts
-
-![Kali SSH Attempt](screenshots/kali-ssh-attempt.png)
+![Kali SSH Attempt](Host%20ip%20ping%20and%20performing%20attack.png)
 
 ### 3. Failed Password Attempts Recorded in Ubuntu auth.log
-
-![Ubuntu Auth Log Failures](screenshots/ubuntu-auth-log-failures.png)
+![Ubuntu Auth Log Failures](failed%20passwords%20attempts.png)
 
 ### 4. Splunk Dashboard for Brute Force Detection
-
-![Splunk Dashboard](screenshots/splunk-dashboard.png)
+![Splunk Dashboard](log%20analysis%20dashboard%20(splunk).png)
 
 ---
 
