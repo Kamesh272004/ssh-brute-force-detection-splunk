@@ -2,20 +2,20 @@
 
 ## Project Overview
 
-This project demonstrates how to simulate and detect an **SSH brute force attack** in a small lab environment using **Kali Linux**, **Ubuntu**, and **Splunk Cloud**.
+This project demonstrates how to simulate and detect an **SSH brute force attack** in a lab environment using **Kali Linux**, **Ubuntu**, and **Splunk Cloud**.
 
-The objective of this lab is to:
+The goal of this project was to:
 
 * Generate failed SSH login attempts from an attacker machine
 * Collect authentication logs from the target Ubuntu system
-* Ingest the logs into Splunk Cloud
+* Ingest those logs into Splunk Cloud
 * Build a dashboard to visualize brute force indicators such as:
 
   * Total failed SSH logins
   * Attacker source IP addresses
   * Failed login attempts over time
 
-This project is useful for understanding how a SOC analyst can detect **credential attacks** and monitor authentication abuse using a SIEM platform.
+This project is useful for understanding how a SOC analyst can detect **credential attacks** and monitor authentication abuse using a SIEM.
 
 ---
 
@@ -30,8 +30,8 @@ This project is useful for understanding how a SOC analyst can detect **credenti
 
 ### Attack Flow
 
-1. Kali connects to the Ubuntu machine over SSH.
-2. Multiple invalid password attempts are made against a fake/invalid username.
+1. Kali Linux connects to the Ubuntu machine over SSH.
+2. Multiple invalid password attempts are made against a fake / invalid username.
 3. Ubuntu logs the failed authentication attempts in `/var/log/auth.log`.
 4. The log file is copied and ingested into Splunk Cloud.
 5. Splunk parses the logs and visualizes brute force activity on a dashboard.
@@ -54,7 +54,7 @@ This project is useful for understanding how a SOC analyst can detect **credenti
 * **Ubuntu** – target machine hosting SSH service and authentication logs
 * **OpenSSH Server** – service exposed on the Ubuntu target
 * **Splunk Cloud** – log ingestion, search, and dashboard visualization
-* **Linux auth.log** – source of SSH authentication events
+* **Linux `auth.log`** – source of SSH authentication events
 
 ---
 
@@ -86,17 +86,17 @@ These events are then analyzed in Splunk to confirm the brute force attempt and 
 * **Attacker IP:** `192.168.64.1`
 * **Target Ubuntu IP:** `192.168.64.4`
 
-> **Note:** IP addresses may vary depending on your VM/network setup.
+> **Note:** IP addresses may vary depending on your VM / network setup.
 
 ---
 
 ## Project Workflow
 
-## 1) Configure SSH on Ubuntu
+### 1) Configure SSH on Ubuntu
 
 The first step was to enable SSH access on the Ubuntu target.
 
-### Commands used
+#### Commands used
 
 ```bash
 sudo apt update
@@ -108,11 +108,11 @@ sudo systemctl status ssh
 
 ---
 
-## 2) Validate Connectivity from Kali
+### 2) Validate Connectivity from Kali
 
-Before generating attack logs, connectivity between Kali and Ubuntu was verified using ping.
+Before generating attack logs, connectivity between Kali and Ubuntu was verified using `ping`.
 
-### Command used
+#### Command used
 
 ```bash
 ping 192.168.64.4
@@ -120,11 +120,11 @@ ping 192.168.64.4
 
 ---
 
-## 3) Simulate SSH Failed Login Attempts
+### 3) Simulate SSH Failed Login Attempts
 
 A test SSH login was initiated from Kali to the Ubuntu machine using a fake or invalid account.
 
-### Command used
+#### Command used
 
 ```bash
 ssh fakeuser@192.168.64.4
@@ -134,17 +134,17 @@ Multiple incorrect password attempts were intentionally entered to generate fail
 
 ---
 
-## 4) Review Authentication Logs on Ubuntu
+### 4) Review Authentication Logs on Ubuntu
 
-After the failed SSH attempts, the Ubuntu system log was reviewed.
+After the failed SSH attempts, the Ubuntu authentication log was reviewed.
 
-### Command used
+#### Command used
 
 ```bash
 sudo tail -f /var/log/auth.log
 ```
 
-Example log events observed:
+#### Example log events observed
 
 ```log
 Failed password for invalid user fakeuser from 192.168.64.1 port 58624 ssh2
@@ -153,13 +153,20 @@ pam_unix(sshd:auth): authentication failure
 Connection closed by invalid user fakeuser 192.168.64.1 port 58624 [preauth]
 ```
 
+These events confirm:
+
+* An SSH authentication attempt was made
+* The username was invalid
+* Password attempts failed
+* The source IP was recorded in the log
+
 ---
 
-## 5) Prepare Log File for Splunk Ingestion
+### 5) Prepare Log File for Splunk Ingestion
 
 A cleaned copy of the authentication log was created and moved to a directory for ingestion.
 
-### Commands used
+#### Commands used
 
 ```bash
 sudo cp /var/log/auth.log /home/ubuntu/Desktop/auth_clean.log
@@ -172,7 +179,7 @@ python3 -m http.server 8000
 
 ---
 
-## 6) Ingest Logs into Splunk Cloud
+### 6) Ingest Logs into Splunk Cloud
 
 The cleaned authentication log was uploaded / ingested into Splunk Cloud and indexed for searching.
 
@@ -182,19 +189,19 @@ Once the data was available in Splunk, searches were created to identify failed 
 
 ## Splunk Detection Logic
 
-### 1. Basic search for failed SSH logins
+### 1. Basic Search for Failed SSH Logins
 
 ```spl
 index=* "Failed password"
 ```
 
-### 2. Search for SSH brute force attempts
+### 2. Search for SSH Brute Force Attempts
 
 ```spl
 index=* source="*auth*" "Failed password"
 ```
 
-### 3. Extract attacker IPs and count attempts
+### 3. Extract Attacker IPs and Count Attempts
 
 ```spl
 index=* source="*auth*" "Failed password"
@@ -203,19 +210,21 @@ index=* source="*auth*" "Failed password"
 | sort - count
 ```
 
-### 4. Failed login attempts over time
+### 4. Failed Login Attempts Over Time
 
 ```spl
 index=* source="*auth*" "Failed password"
 | timechart count
 ```
 
-### 5. Full dashboard-style search
+### 5. Threshold-Based Brute Force Detection
 
 ```spl
 index=* source="*auth*" "Failed password"
 | rex "from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
-| stats count by src_ip
+| bucket _time span=5m
+| stats count by _time src_ip
+| where count >= 5
 ```
 
 ---
@@ -231,7 +240,7 @@ A dashboard titled **SSH Brute Force Detection** was created with the following 
    Displays the source IP address responsible for the failed login attempts.
 
 3. **Failed Login Attempts Over Time**
-   Visualizes the brute force activity timeline to show when the authentication failures occurred.
+   Visualizes the brute force activity timeline to show when authentication failures occurred.
 
 ---
 
@@ -268,7 +277,7 @@ The following log patterns are useful for SSH brute force detection in Linux:
 
 ---
 
-## Use Case
+## Detection Use Case
 
 This project simulates a common SOC monitoring use case:
 
@@ -333,24 +342,55 @@ ssh-brute-force-detection-splunk/
 
 ## Screenshots
 
-### 1. SSH service enabled on Ubuntu
+### 1. SSH Service Enabled on Ubuntu
 
 ![SSH Service Enabled](screenshots/ssh-service-status.png)
 
-### 2. Kali attacker reaching the Ubuntu target and initiating SSH attempts
+### 2. Kali Attacker Reaching the Ubuntu Target and Initiating SSH Attempts
 
 ![Kali SSH Attempt](screenshots/kali-ssh-attempt.png)
 
-### 3. Failed password attempts recorded in Ubuntu auth.log
+### 3. Failed Password Attempts Recorded in Ubuntu auth.log
 
 ![Ubuntu Auth Log Failures](screenshots/ubuntu-auth-log-failures.png)
 
-### 4. Splunk dashboard for brute force detection
+### 4. Splunk Dashboard for Brute Force Detection
 
 ![Splunk Dashboard](screenshots/splunk-dashboard.png)
+
+---
+
+## Limitations
+
+* This is a **lab simulation**, not a production environment
+* Attack volume is small and manually generated
+* Logs were prepared manually for Splunk ingestion
+* No automated alerting or response workflow was implemented in this version
+
+---
+
+## Future Improvements
+
+This project can be extended by adding:
+
+* **Splunk alerts** for repeated failed SSH attempts
+* **Threshold-based brute force detection** with alerting
+* **GeoIP enrichment** for source IPs
+* **Correlation rules** for successful login after multiple failures
+* **Linux log forwarding** using Splunk Universal Forwarder or syslog
+* **MITRE ATT&CK tagged dashboards**
+* **Detection of password spray vs brute force behavior**
 
 ---
 
 ## Conclusion
 
 This project successfully demonstrates how to detect **SSH brute force activity** using Linux authentication logs and Splunk Cloud. By generating failed SSH login attempts from Kali, reviewing `/var/log/auth.log`, and visualizing the results in Splunk, the project shows a practical SOC-style detection workflow for identifying credential attacks against Linux systems.
+
+---
+
+## Author
+
+**Kamesh**
+Cybersecurity / SOC / Detection Engineering Lab Project
+
